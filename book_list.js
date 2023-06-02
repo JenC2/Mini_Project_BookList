@@ -8,20 +8,7 @@ class Book {
 
 class UI {
   static displayBooks() {
-    const StoreBooks = [
-      {
-        title: "Book 1",
-        author: "Jenny",
-        isbn: "00001",
-      },
-      {
-        title: "Book2",
-        author: "Jenny",
-        isbn: "00002",
-      },
-    ];
-
-    const books = StoreBooks;
+    const books = Store.getBooks();
     books.forEach((book) => UI.addBookToList(book));
   }
   static addBookToList(book) {
@@ -60,7 +47,36 @@ class UI {
   }
 }
 
-// handle storage
+class Store {
+  static getBooks() {
+    let books;
+    if(localStorage.getItem("books") === null) {
+      books = [];
+    } else {
+      books = JSON.parse(localStorage.getItem("books"));
+    }
+    return books;
+  }
+
+  static addBook(book) {
+    const books = Store.getBooks();
+    books.push(book);
+
+    localStorage.setItem('books', JSON.stringify(books));
+  }
+
+  static removeBook(isbn) {
+    const books = Store.getBooks();
+
+    books.forEach((book, index) => {
+      if(book.isbn === isbn) {
+        books.splice(index, 1);
+      }
+    });
+
+    localStorage.setItem("books", JSON.stringify(books));
+  }
+}
 
 document.addEventListener("DOMContentLoaded", UI.displayBooks);
 
@@ -83,6 +99,9 @@ document.querySelector("#book-form").addEventListener("submit", (e) => {
     // Add book to list
     UI.addBookToList(book);
 
+    // Add book to store
+    Store.addBook(book);
+
     // Show success message
     UI.showAlert("Book Added", "success")
   
@@ -91,7 +110,11 @@ document.querySelector("#book-form").addEventListener("submit", (e) => {
 });
 
 document.querySelector("#book-list").addEventListener("click", (e) => {
-  UI.deleteBook(e.target);
+    // Remove book from UI
+    UI.deleteBook(e.target);
+
+    // Remove book from store
+    Store.removeBook(e.target.parentElement.previousElementSibling.textContent)
 
     // Show delete message
     UI.showAlert("Book Removed", "danger")
